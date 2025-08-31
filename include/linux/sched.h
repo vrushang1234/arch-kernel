@@ -589,6 +589,14 @@ struct sched_entity {
 
 	u64				nr_migrations;
 
+	u64 rl_wait_time_start;
+	u64 rl_last_wait_time;
+	u64 rl_total_wait_time;
+	u64 rl_wait_time_count;
+
+	u64 rl_last_burst_time;
+	u64 rl_burst_count;
+
 #ifdef CONFIG_FAIR_GROUP_SCHED
 	int				depth;
 	struct sched_entity		*parent;

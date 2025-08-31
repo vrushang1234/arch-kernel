@@ -1,6 +1,7 @@
 #include "nn_policy.h"
 #include <linux/kernel.h>
 #include <linux/math64.h>
+#include <linux/time.h>
 
 #define Q 32
 #define ONE_Q ((q32_32)1 << Q)
@@ -86,5 +87,50 @@ void forward(const q32_32 input[INPUT_SIZE]) {
     nn_tanh_q32(A2, HIDDEN_LAYER_2_SIZE);
     nn_gemm_q32(&W3[0][0], A2, B3, NN_OUTPUT, OUTPUT_SIZE, HIDDEN_LAYER_2_SIZE);
     nn_softmax_q32(NN_OUTPUT, NN_OUTPUT, OUTPUT_SIZE);
+}
+
+static inline q32_32 q32_from_ratio_s64(s64 num, s64 den) {
+    if (unlikely(den == 0)) return (num >= 0) ? (q32_32)S64_MAX : (q32_32)S64_MIN;
+    __int128 t = (__int128)num << Q;
+    __int128 d = (__int128)den;
+    if (t >= 0) t += d / 2; else t -= d / 2;
+    t /= d;
+    return (q32_32)sat_s64(t);
+}
+
+static inline q32_32 q32_from_ns(s64 ns) { return q32_from_ratio_s64(ns, (s64)NSEC_PER_SEC); }
+static inline q32_32 q32_from_ns_u64(u64 ns) { return q32_from_ns((s64)ns); }
+static inline q32_32 q32_from_int(s64 x) { __int128 t = (__int128)x << Q; return (q32_32)sat_s64(t); }
+
+int rl_decide(u64 task_last_wait_time,
+              u64 task_total_wait_time,   u64 task_wait_count,
+              u64 last_burst_time,        u64 total_burst_time, u64 task_burst_count,
+              u64 task_vruntime,          u64 task_sum_exec_runtime,
+              u64 queue_total_wait_time,  u64 queue_wait_count,
+              u64 queue_total_burst_time, u64 total_burst_count)
+{
+    q32_32 in[INPUT_SIZE];
+    in[0] = q32_from_ns_u64(task_last_wait_time);
+    in[1] = task_wait_count
+          ? q32_from_ratio_s64((s64)task_total_wait_time, (s64)task_wait_count * (s64)NSEC_PER_SEC)
+          : 0;
+    in[2] = q32_from_ns_u64(last_burst_time);
+    in[3] = task_burst_count
+          ? q32_from_ratio_s64((s64)total_burst_time, (s64)task_burst_count * (s64)NSEC_PER_SEC)
+          : 0;
+    in[4] = q32_from_ns_u64(task_vruntime);
+    in[5] = q32_from_ns_u64(task_sum_exec_runtime);
+    in[6] = queue_wait_count
+          ? q32_from_ratio_s64((s64)queue_total_wait_time, (s64)queue_wait_count * (s64)NSEC_PER_SEC)
+          : 0;
+    in[7] = total_burst_count
+          ? q32_from_ratio_s64((s64)queue_total_burst_time, (s64)total_burst_count * (s64)NSEC_PER_SEC)
+          : 0;
+    forward(in);
+    int argmax = 0;
+    q32_32 best = NN_OUTPUT[0];
+    for (int i = 1; i < OUTPUT_SIZE; ++i)
+        if (NN_OUTPUT[i] > best) { best = NN_OUTPUT[i]; argmax = i; }
+    return argmax - ((OUTPUT_SIZE - 1) / 2);
 }
 

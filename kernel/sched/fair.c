@@ -57,6 +57,7 @@
 #include "sched.h"
 #include "stats.h"
 #include "autogroup.h"
+#include "nn_policy.h"
 
 /*
  * The initial- and re-scaling of tunables is configurable
@@ -849,6 +850,8 @@ RB_DECLARE_CALLBACKS(static, min_vruntime_cb, struct sched_entity,
  */
 static void __enqueue_entity(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
+	struct rq *rq = rq_of(cfs_rq);
+	se->rl_wait_time_start = rq_clock_task(rq); 
 	avg_vruntime_add(cfs_rq, se);
 	se->min_vruntime = se->vruntime;
 	se->min_slice = se->slice;
@@ -5620,6 +5623,12 @@ static void put_prev_entity(struct cfs_rq *cfs_rq, struct sched_entity *prev)
 	 */
 	if (prev->on_rq)
 		update_curr(cfs_rq);
+
+	u64 burst_time = prev->sum_exec_runtime - prev->prev_sum_exec_runtime;
+	prev->rl_burst_time = burst_time;
+	prev->rl_burst_count ++;
+	cfs_rq->rl_total_burst_time += burst_time;
+	cfs_rq->rl_burst_count++;
 
 	/* throttle cfs_rqs exceeding runtime */
 	check_cfs_rq_runtime(cfs_rq);
@@ -13292,6 +13301,24 @@ static void switched_to_fair(struct rq *rq, struct task_struct *p)
 static void __set_next_task_fair(struct rq *rq, struct task_struct *p, bool first)
 {
 	struct sched_entity *se = &p->se;
+	struct cfs_rq* cfs_rq = cfs_rq_of(se);
+
+	{
+		u64 now = rq_clock_task(rq);
+		if(se->rl_wait_time_start){
+			u64 rl_wait_time = now - se->rl_wait_time_start;
+			se->rl_last_wait_time = rl_wait_time;
+			se->rl_total_wait_time += rl_wait_time;
+			se->rl_wait_time_count ++;
+			se->rl_wait_time_start = 0;
+
+			cfs_rq->rl_total_wait_time += rl_wait_time;
+			cfs_rq-> rl_wait_count++;
+
+			int new_nice = rl_decide(se->rl_last_wait_time, se->rl_total_wait_time, se->rl_wait_time_count, se->rl_last_burst_time, se->rl_total_burst_time, se->rl_burst_count, se->vruntime, se->sum_exec_runtime, cfs_rq->rl_total_wait_time, cfs_rq->rl_wait_count, cfs_rq->rl_total_burst_time, cfs_rq->rl_burst_count);
+			trace_printk("New Nice: %d\n", new_nice);
+		}
+	}
 
 #ifdef CONFIG_SMP
 	if (task_on_rq_queued(p)) {
@@ -13337,6 +13364,10 @@ static void set_next_task_fair(struct rq *rq, struct task_struct *p, bool first)
 
 void init_cfs_rq(struct cfs_rq *cfs_rq)
 {
+	cfs_rq->rl_total_wait_time = 0;
+	cfs_rq->rl_total_burst_time = 0;
+	cfs_rq->rl_burst_count = 0;
+	cfs_rq->rl_wait_count = 0;
 	cfs_rq->tasks_timeline = RB_ROOT_CACHED;
 	cfs_rq->min_vruntime = (u64)(-(1LL << 20));
 #ifdef CONFIG_SMP
