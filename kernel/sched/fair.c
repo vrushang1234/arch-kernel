@@ -5625,9 +5625,8 @@ static void put_prev_entity(struct cfs_rq *cfs_rq, struct sched_entity *prev)
 		update_curr(cfs_rq);
 
 	u64 burst_time = prev->sum_exec_runtime - prev->prev_sum_exec_runtime;
-	prev->rl_burst_time = burst_time;
+	prev->rl_last_burst_time = burst_time;
 	prev->rl_burst_count ++;
-	cfs_rq->rl_total_burst_time += burst_time;
 	cfs_rq->rl_burst_count++;
 
 	/* throttle cfs_rqs exceeding runtime */
@@ -13315,7 +13314,7 @@ static void __set_next_task_fair(struct rq *rq, struct task_struct *p, bool firs
 			cfs_rq->rl_total_wait_time += rl_wait_time;
 			cfs_rq-> rl_wait_count++;
 
-			int new_nice = rl_decide(se->rl_last_wait_time, se->rl_total_wait_time, se->rl_wait_time_count, se->rl_last_burst_time, se->rl_total_burst_time, se->rl_burst_count, se->vruntime, se->sum_exec_runtime, cfs_rq->rl_total_wait_time, cfs_rq->rl_wait_count, cfs_rq->rl_total_burst_time, cfs_rq->rl_burst_count);
+			int new_nice = rl_decide(se->rl_last_wait_time, se->rl_total_wait_time, se->rl_wait_time_count, se->rl_last_burst_time, se->sum_exec_runtime, se->rl_burst_count, se->vruntime, se->sum_exec_runtime, cfs_rq->rl_total_wait_time, cfs_rq->rl_wait_count, cfs_rq->rl_total_burst_time, cfs_rq->rl_burst_count);
 			trace_printk("New Nice: %d\n", new_nice);
 		}
 	}

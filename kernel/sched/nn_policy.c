@@ -11,6 +11,10 @@
 #define S64_MIN  ((s64)(-S64_MAX - 1))
 #endif
 
+q32_32 A1[HIDDEN_LAYER_1_SIZE];
+q32_32 A2[HIDDEN_LAYER_2_SIZE];
+q32_32 NN_OUTPUT[OUTPUT_SIZE];
+
 static inline s64 sat_s64(__int128 x) {
     if (x > (__int128)S64_MAX) return S64_MAX;
     if (x < (__int128)S64_MIN) return S64_MIN;
@@ -65,18 +69,22 @@ static inline q32_32 qexp_q32_32(q32_32 x) {
 void nn_softmax_q32(const q32_32 *logits, q32_32 *probs, int n) {
     s64 max = logits[0];
     for (int i = 1; i < n; i++) if (logits[i] > max) max = logits[i];
+
     q32_32 exps[OUTPUT_SIZE];
-    __int128 sum = 0;
+    u64 sum = 0;
     for (int i = 0; i < n; i++) {
         q32_32 z = (q32_32)((s64)logits[i] - max);
         q32_32 e = qexp_q32_32(z);
         exps[i] = e;
-        sum += e;
+        sum += (u64)e;
     }
-    s64 sum64 = sat_s64(sum);
+    if (!sum) { /* extremely defensive; should not happen */
+        for (int i = 0; i < n; i++) probs[i] = 0;
+        return;
+    }
     for (int i = 0; i < n; i++) {
-        __int128 p = ((__int128)exps[i] << Q) / sum64;
-        probs[i] = (q32_32)sat_s64(p);
+        u64 q = mul_u64_u64_div_u64((u64)exps[i], (u64)ONE_Q, (u64)sum);
+        probs[i] = (q32_32)(s64)q;
     }
 }
 
@@ -89,13 +97,24 @@ void forward(const q32_32 input[INPUT_SIZE]) {
     nn_softmax_q32(NN_OUTPUT, NN_OUTPUT, OUTPUT_SIZE);
 }
 
-static inline q32_32 q32_from_ratio_s64(s64 num, s64 den) {
-    if (unlikely(den == 0)) return (num >= 0) ? (q32_32)S64_MAX : (q32_32)S64_MIN;
-    __int128 t = (__int128)num << Q;
-    __int128 d = (__int128)den;
-    if (t >= 0) t += d / 2; else t -= d / 2;
-    t /= d;
-    return (q32_32)sat_s64(t);
+static inline q32_32 q32_from_ratio_s64(s64 num, s64 den)
+{
+    if (unlikely(den == 0))
+        return (num >= 0) ? (q32_32)S64_MAX : (q32_32)S64_MIN;
+
+    int neg = ((num < 0) ^ (den < 0));
+    u64 a = (num < 0) ? (u64)(-(num + 1)) + 1 : (u64)num;
+    u64 b = (den < 0) ? (u64)(-(den + 1)) + 1 : (u64)den;
+
+    u64 q = mul_u64_u64_div_u64(a, (u64)ONE_Q, b);  /* floor((a*2^32)/b) */
+
+    if (neg) {
+        if (q > (u64)S64_MAX + 1) return (q32_32)S64_MIN;
+        return (q32_32)-(s64)q;
+    } else {
+        if (q > (u64)S64_MAX) return (q32_32)S64_MAX;
+        return (q32_32)(s64)q;
+    }
 }
 
 static inline q32_32 q32_from_ns(s64 ns) { return q32_from_ratio_s64(ns, (s64)NSEC_PER_SEC); }
