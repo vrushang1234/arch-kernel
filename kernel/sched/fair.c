@@ -6942,6 +6942,7 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 {
 	struct cfs_rq *cfs_rq;
 	struct sched_entity *se = &p->se;
+	set_user_nice(p, se->pending_nice);
 	int h_nr_idle = task_has_idle_policy(p);
 	int h_nr_runnable = 1;
 	int task_new = !(flags & ENQUEUE_WAKEUP);
@@ -13315,7 +13316,9 @@ static void __set_next_task_fair(struct rq *rq, struct task_struct *p, bool firs
 			cfs_rq-> rl_wait_count++;
 
 			int new_nice = rl_decide(se->rl_last_wait_time, se->rl_total_wait_time, se->rl_wait_time_count, se->rl_last_burst_time, se->sum_exec_runtime, se->rl_burst_count, se->vruntime, se->sum_exec_runtime, cfs_rq->rl_total_wait_time, cfs_rq->rl_wait_count, cfs_rq->rl_total_burst_time, cfs_rq->rl_burst_count);
-			trace_printk("New Nice: %d\n", new_nice);
+			if (task_nice(p) != new_nice) {
+				se->pending_nice = (long)new_nice;
+			}
 		}
 	}
 
