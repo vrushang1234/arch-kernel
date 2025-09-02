@@ -5,7 +5,7 @@
 set -euo pipefail
 
 # --- Config / Args ------------------------------------------------------------
-KDIR="${1:-$HOME/linux}"   # kernel source dir (arg1 overrides)
+KDIR="${1:-$HOME/arch-kernel}"   # kernel source dir (arg1 overrides)
 CONSOLE_ARGS="${CONSOLE_ARGS:-console=tty0 console=ttyS0,115200n8 rootdelay=5}"  # tweak if you like
 
 # --- Helpers ------------------------------------------------------------------
