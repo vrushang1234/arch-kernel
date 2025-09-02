@@ -6944,13 +6944,10 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	struct sched_entity *se = &p->se;
 	if (se->pending_nice != INT_MIN) {       
         int target_nice = clamp(se->pending_nice, -20, 19);
-        unsigned long new_weight =
-            sched_prio_to_weight[NICE_TO_PRIO(target_nice)];
-
-        if (se->load.weight != new_weight)
-            reweight_entity(cfs_rq, se, new_weight);
-
-        se->pending_nice = INT_MIN; 
+	WRITE_ONCE(p->static_prio, NICE_TO_PRIO(n));
+	p->prio = effective_prio(p);
+	set_load_weight(p, false);
+	se->pending_nice = 0;
     }
 	int h_nr_idle = task_has_idle_policy(p);
 	int h_nr_runnable = 1;
