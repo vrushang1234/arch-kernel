@@ -1032,6 +1032,8 @@ static bool update_deadline(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	if (!se->custom_slice)
 		se->slice = sysctl_sched_base_slice;
 
+	trace_printk("New Slice: %d", se->slice);
+
 	/*
 	 * EEVDF: vd_i = ve_i + r_i / w_i
 	 */
