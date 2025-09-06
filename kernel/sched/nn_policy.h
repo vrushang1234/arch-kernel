@@ -20,7 +20,8 @@ extern const q32_32 W3[OUTPUT_SIZE][HIDDEN_LAYER_2_SIZE];
 extern const q32_32 B3[OUTPUT_SIZE];
 extern	     q32_32 NN_OUTPUT[OUTPUT_SIZE];
 
-unsigned int slice_values[OUTPUT_SIZE] = {350000,420000,490000,560000,630000,700000,770000,840000,910000,980000,1050000};
+extern const unsigned int slice_values[OUTPUT_SIZE];
+
 
 void nn_gemm_q32(const q32_32 *w, const q32_32 *x, const q32_32 *b, q32_32 *y, int rows, int cols);
 void nn_tanh_q32(q32_32 *v, int n);

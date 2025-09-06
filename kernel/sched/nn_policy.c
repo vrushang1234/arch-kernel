@@ -2,7 +2,6 @@
 #include <linux/kernel.h>
 #include <linux/math64.h>
 #include <linux/time.h>
-#include <valarray>
 
 #define Q 32
 #define ONE_Q ((q32_32)1 << Q)
