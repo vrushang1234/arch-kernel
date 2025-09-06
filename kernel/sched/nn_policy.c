@@ -2,6 +2,7 @@
 #include <linux/kernel.h>
 #include <linux/math64.h>
 #include <linux/time.h>
+#include <valarray>
 
 #define Q 32
 #define ONE_Q ((q32_32)1 << Q)
@@ -121,7 +122,7 @@ static inline q32_32 q32_from_ns(s64 ns) { return q32_from_ratio_s64(ns, (s64)NS
 static inline q32_32 q32_from_ns_u64(u64 ns) { return q32_from_ns((s64)ns); }
 static inline q32_32 q32_from_int(s64 x) { __int128 t = (__int128)x << Q; return (q32_32)sat_s64(t); }
 
-int rl_decide(u64 task_last_wait_time,
+unsigned int rl_decide(u64 task_last_wait_time,
               u64 task_total_wait_time,   u64 task_wait_count,
               u64 last_burst_time,        u64 total_burst_time, u64 task_burst_count,
               u64 task_vruntime,          u64 task_sum_exec_runtime,
@@ -150,6 +151,6 @@ int rl_decide(u64 task_last_wait_time,
     q32_32 best = NN_OUTPUT[0];
     for (int i = 1; i < OUTPUT_SIZE; ++i)
         if (NN_OUTPUT[i] > best) { best = NN_OUTPUT[i]; argmax = i; }
-    return argmax - ((OUTPUT_SIZE - 1) / 2);
+    return slice_values[argmax];
 }
 
