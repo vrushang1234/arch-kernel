@@ -94,7 +94,6 @@ void forward(const q32_32 input[INPUT_SIZE]) {
     nn_gemm_q32(&W2[0][0], A1, B2, A2, HIDDEN_LAYER_2_SIZE, HIDDEN_LAYER_1_SIZE);
     nn_tanh_q32(A2, HIDDEN_LAYER_2_SIZE);
     nn_gemm_q32(&W3[0][0], A2, B3, NN_OUTPUT, OUTPUT_SIZE, HIDDEN_LAYER_2_SIZE);
-    nn_softmax_q32(NN_OUTPUT, NN_OUTPUT, OUTPUT_SIZE);
 }
 
 static inline q32_32 q32_from_ratio_s64(s64 num, s64 den)
