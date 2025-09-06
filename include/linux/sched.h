@@ -594,10 +594,12 @@ struct sched_entity {
 	u64 rl_total_wait_time;
 	u64 rl_wait_time_count;
 
-	long pending_nice;
 
 	u64 rl_last_burst_time;
 	u64 rl_burst_count;
+
+	u64 last_slice_eval;
+	unsigned int rl_slice;
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
 	int				depth;

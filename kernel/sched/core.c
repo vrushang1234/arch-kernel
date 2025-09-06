@@ -4503,7 +4503,8 @@ static void __sched_fork(unsigned long clone_flags, struct task_struct *p)
 	p->se.rl_total_wait_time = 0;
 	p->se.rl_wait_time_count = 0;
 	p->se.rl_burst_count = 0;
-	p->se.pending_nice = 0;
+	p->se.last_slice_eval = 0;
+	p->se.rl_slice = 700000ULL;
 	INIT_LIST_HEAD(&p->se.group_node);
 
 	/* A delayed task cannot be in clone(). */

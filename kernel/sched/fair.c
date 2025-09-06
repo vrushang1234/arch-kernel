@@ -1032,7 +1032,6 @@ static bool update_deadline(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	if (!se->custom_slice)
 		se->slice = sysctl_sched_base_slice;
 
-	trace_printk("New Slice: %d", se->slice);
 
 	/*
 	 * EEVDF: vd_i = ve_i + r_i / w_i
@@ -13315,19 +13314,18 @@ static void __set_next_task_fair(struct rq *rq, struct task_struct *p, bool firs
 
 			cfs_rq->rl_total_wait_time += rl_wait_time;
 			cfs_rq-> rl_wait_count++;
+			
+			if(now - se->last_slice_eval >= 500000ULL){
+				unsigned int new_slice = rl_decide(se->rl_last_wait_time, se->rl_total_wait_time, se->rl_wait_time_count, se->rl_last_burst_time, se->sum_exec_runtime, se->rl_burst_count, se->vruntime, se->sum_exec_runtime, cfs_rq->rl_total_wait_time, cfs_rq->rl_wait_count, cfs_rq->rl_total_burst_time, cfs_rq->rl_burst_count);
+				se->rl_slice = new_slice;
+				se->last_slice_eval = now;
+			}
 
-			u64 rl_overhead_start_time = ktime_get_ns();
-
-			unsigned int new_slice = rl_decide(se->rl_last_wait_time, se->rl_total_wait_time, se->rl_wait_time_count, se->rl_last_burst_time, se->sum_exec_runtime, se->rl_burst_count, se->vruntime, se->sum_exec_runtime, cfs_rq->rl_total_wait_time, cfs_rq->rl_wait_count, cfs_rq->rl_total_burst_time, cfs_rq->rl_burst_count);
-
-			u64 rl_overhead_time = ktime_get_ns() - rl_overhead_start_time; 
-
-			trace_printk("Overhead for PID %d: %llu",task_pid_nr(p), (unsigned long long)rl_overhead_time);
-
-			if(new_slice != se->slice){
-				se->slice = new_slice;
+			if(se->rl_slice != se->slice || !se->custom_slice){
+				se->slice = se->rl_slice;
 				se->custom_slice = 1;
 			}
+			
 		}
 	}
 
