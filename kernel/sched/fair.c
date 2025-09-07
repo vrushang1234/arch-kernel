@@ -5630,6 +5630,9 @@ static void put_prev_entity(struct cfs_rq *cfs_rq, struct sched_entity *prev)
 	prev->rl_burst_count ++;
 	cfs_rq->rl_burst_count++;
 
+	struct task_struct *p = container_of(prev, struct task_struct, se);
+	trace_printk("PID: %d, Last Wait Time: %llu, Last Burst Time: %llu",task_pid_nr(p),prev->rl_last_wait_time, prev->rl_last_burst_time);
+
 	/* throttle cfs_rqs exceeding runtime */
 	check_cfs_rq_runtime(cfs_rq);
 
