@@ -136,12 +136,10 @@ unsigned int rl_decide(u64 task_last_wait_time,
     in[3] = task_burst_count
           ? q32_from_ratio_s64((s64)total_burst_time, (s64)task_burst_count * (s64)NSEC_PER_SEC)
           : 0;
-    in[4] = q32_from_ns_u64(task_vruntime);
-    in[5] = q32_from_ns_u64(task_sum_exec_runtime);
-    in[6] = queue_wait_count
+    in[4] = queue_wait_count
           ? q32_from_ratio_s64((s64)queue_total_wait_time, (s64)queue_wait_count * (s64)NSEC_PER_SEC)
           : 0;
-    in[7] = total_burst_count
+    in[5] = total_burst_count
           ? q32_from_ratio_s64((s64)queue_total_burst_time, (s64)total_burst_count * (s64)NSEC_PER_SEC)
           : 0;
     forward(in);

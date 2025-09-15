@@ -1,7 +1,7 @@
 #pragma once
 #include <linux/types.h>
 
-#define INPUT_SIZE 8
+#define INPUT_SIZE 6
 #define HIDDEN_LAYER_1_SIZE 50
 #define HIDDEN_LAYER_2_SIZE 70
 #define OUTPUT_SIZE 11
