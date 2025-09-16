@@ -6974,6 +6974,36 @@ enqueue_task_fair(struct rq *rq, struct task_struct *p, int flags)
 	if (p->in_iowait)
 		cpufreq_update_util(rq, SCHED_CPUFREQ_IOWAIT);
 
+	//RL Decision
+	if (p->se.rl_last_wait_time) {
+		struct cfs_rq *leaf_cfs = cfs_rq_of(&p->se);
+		u64 now = rq_clock_task(rq);
+
+		if (now - p->se.last_slice_eval >= 100000000ULL) {
+			unsigned int new_slice = rl_decide(
+				p->se.rl_last_wait_time,
+				p->se.rl_total_wait_time,
+				p->se.rl_wait_time_count,
+				p->se.rl_last_burst_time,
+				p->se.sum_exec_runtime,
+				p->se.rl_burst_count,
+				leaf_cfs->rl_total_wait_time,
+				leaf_cfs->rl_wait_count,
+				leaf_cfs->rl_total_burst_time,
+				leaf_cfs->rl_burst_count,
+				p);
+			p->se.rl_slice = new_slice;
+			p->se.last_slice_eval = now;
+		}
+
+		if (p->se.rl_slice != p->se.slice || !p->se.custom_slice) {
+			p->se.slice = p->se.rl_slice;
+			p->se.custom_slice = 1;
+		}
+
+		slice = p->se.slice;
+	}
+
 	if (task_new && se->sched_delayed)
 		h_nr_runnable = 0;
 
@@ -13317,18 +13347,6 @@ static void __set_next_task_fair(struct rq *rq, struct task_struct *p, bool firs
 
 			cfs_rq->rl_total_wait_time += rl_wait_time;
 			cfs_rq-> rl_wait_count++;
-			
-			if(now - se->last_slice_eval >= 100000000ULL){
-				unsigned int new_slice = rl_decide(se->rl_last_wait_time, se->rl_total_wait_time, se->rl_wait_time_count, se->rl_last_burst_time, se->sum_exec_runtime, se->rl_burst_count, cfs_rq->rl_total_wait_time, cfs_rq->rl_wait_count, cfs_rq->rl_total_burst_time, cfs_rq->rl_burst_count, p);
-				se->rl_slice = new_slice;
-				se->last_slice_eval = now;
-			}
-
-			if(se->rl_slice != se->slice || !se->custom_slice){
-				se->slice = se->rl_slice;
-				se->custom_slice = 1;
-			}
-			
 		}
 	}
 
