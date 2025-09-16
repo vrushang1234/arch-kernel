@@ -598,8 +598,10 @@ struct sched_entity {
 	u64 rl_last_burst_time;
 	u64 rl_burst_count;
 
-	u64 last_slice_eval;
-	unsigned int rl_slice;
+	u64 last_state[10];
+	u64 last_action; 
+	u64 last_action_prob;
+
 
 #ifdef CONFIG_FAIR_GROUP_SCHED
 	int				depth;

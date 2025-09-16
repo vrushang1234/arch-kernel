@@ -120,32 +120,60 @@ static inline q32_32 q32_from_ns(s64 ns) { return q32_from_ratio_s64(ns, (s64)NS
 static inline q32_32 q32_from_ns_u64(u64 ns) { return q32_from_ns((s64)ns); }
 static inline q32_32 q32_from_int(s64 x) { __int128 t = (__int128)x << Q; return (q32_32)sat_s64(t); }
 
-unsigned int rl_decide(u64 task_last_wait_time,
-              u64 task_total_wait_time,   u64 task_wait_count,
-              u64 last_burst_time,        u64 total_burst_time, u64 task_burst_count,
-              u64 queue_total_wait_time,  u64 queue_wait_count,
-              u64 queue_total_burst_time, u64 total_burst_count)
-{
-    q32_32 in[INPUT_SIZE];
+static inline void rl_build_input(
+    q32_32 in[INPUT_SIZE],
+    u64 task_last_wait_time,
+    u64 task_total_wait_time,   u64 task_wait_count,
+    u64 last_burst_time,        u64 total_burst_time, u64 task_burst_count,
+    u64 queue_total_wait_time,  u64 queue_wait_count,
+    u64 queue_total_burst_time, u64 total_burst_count
+){
     in[0] = q32_from_ns_u64(task_last_wait_time);
+
     in[1] = task_wait_count
           ? q32_from_ratio_s64((s64)task_total_wait_time, (s64)task_wait_count * (s64)NSEC_PER_SEC)
           : 0;
+
     in[2] = q32_from_ns_u64(last_burst_time);
+
     in[3] = task_burst_count
           ? q32_from_ratio_s64((s64)total_burst_time, (s64)task_burst_count * (s64)NSEC_PER_SEC)
           : 0;
+
     in[4] = queue_wait_count
           ? q32_from_ratio_s64((s64)queue_total_wait_time, (s64)queue_wait_count * (s64)NSEC_PER_SEC)
           : 0;
+
     in[5] = total_burst_count
           ? q32_from_ratio_s64((s64)queue_total_burst_time, (s64)total_burst_count * (s64)NSEC_PER_SEC)
           : 0;
+}
+
+unsigned int rl_decide(
+    u64 task_last_wait_time,
+    u64 task_total_wait_time,   u64 task_wait_count,
+    u64 last_burst_time,        u64 total_burst_time, u64 task_burst_count,
+    u64 queue_total_wait_time,  u64 queue_wait_count,
+    u64 queue_total_burst_time, u64 total_burst_count
+){
+    q32_32 in[INPUT_SIZE];
+
+    rl_build_input(
+        in,
+        task_last_wait_time,
+        task_total_wait_time,   task_wait_count,
+        last_burst_time,        total_burst_time, task_burst_count,
+        queue_total_wait_time,  queue_wait_count,
+        queue_total_burst_time, total_burst_count
+    );
+
     forward(in);
+
     int argmax = 0;
     q32_32 best = NN_OUTPUT[0];
-    for (int i = 1; i < OUTPUT_SIZE; ++i)
+    for (int i = 1; i < OUTPUT_SIZE; ++i) {
         if (NN_OUTPUT[i] > best) { best = NN_OUTPUT[i]; argmax = i; }
+    }
     return slice_values[argmax];
 }
 
