@@ -154,15 +154,17 @@ unsigned int rl_decide(
     u64 task_total_wait_time,   u64 task_wait_count,
     u64 last_burst_time,        u64 total_burst_time, u64 task_burst_count,
     u64 queue_total_wait_time,  u64 queue_wait_count,
-    u64 queue_total_burst_time, u64 total_burst_count
+    u64 queue_total_burst_time, u64 total_burst_count,
+    struct task_struct *p
 ){
     q32_32 in[INPUT_SIZE];
+    struct sched_entity *se = &p->se;
 
     rl_build_input(
         in,
         task_last_wait_time,
         task_total_wait_time,   task_wait_count,
-        last_burst_time,        total_burst_time, task_burst_count,
+        last_burst_time, total_burst_time, task_burst_count,
         queue_total_wait_time,  queue_wait_count,
         queue_total_burst_time, total_burst_count
     );
@@ -174,6 +176,12 @@ unsigned int rl_decide(
     for (int i = 1; i < OUTPUT_SIZE; ++i) {
         if (NN_OUTPUT[i] > best) { best = NN_OUTPUT[i]; argmax = i; }
     }
+    se->rl_last_state[0] = in[0];
+    se->rl_last_state[1] = in[1];
+    se->rl_last_state[2] = in[2];
+    se->rl_last_state[3] = in[3];
+    se->rl_last_state[4] = in[4];
+    se->rl_last_state[5] = in[5];
     return slice_values[argmax];
 }
 
