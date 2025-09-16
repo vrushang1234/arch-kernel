@@ -123,7 +123,6 @@ static inline q32_32 q32_from_int(s64 x) { __int128 t = (__int128)x << Q; return
 unsigned int rl_decide(u64 task_last_wait_time,
               u64 task_total_wait_time,   u64 task_wait_count,
               u64 last_burst_time,        u64 total_burst_time, u64 task_burst_count,
-              u64 task_vruntime,          u64 task_sum_exec_runtime,
               u64 queue_total_wait_time,  u64 queue_wait_count,
               u64 queue_total_burst_time, u64 total_burst_count)
 {

@@ -13319,7 +13319,7 @@ static void __set_next_task_fair(struct rq *rq, struct task_struct *p, bool firs
 			cfs_rq-> rl_wait_count++;
 			
 			if(now - se->last_slice_eval >= 100000000ULL){
-				unsigned int new_slice = rl_decide(se->rl_last_wait_time, se->rl_total_wait_time, se->rl_wait_time_count, se->rl_last_burst_time, se->sum_exec_runtime, se->rl_burst_count, se->vruntime, se->sum_exec_runtime, cfs_rq->rl_total_wait_time, cfs_rq->rl_wait_count, cfs_rq->rl_total_burst_time, cfs_rq->rl_burst_count);
+				unsigned int new_slice = rl_decide(se->rl_last_wait_time, se->rl_total_wait_time, se->rl_wait_time_count, se->rl_last_burst_time, se->sum_exec_runtime, se->rl_burst_count, cfs_rq->rl_total_wait_time, cfs_rq->rl_wait_count, cfs_rq->rl_total_burst_time, cfs_rq->rl_burst_count);
 				se->rl_slice = new_slice;
 				se->last_slice_eval = now;
 			}
