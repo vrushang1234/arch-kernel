@@ -28,3 +28,5 @@ void nn_tanh_q32(q32_32 *v, int n);
 void nn_softmax_q32(const q32_32 *logits, q32_32 *probs, int n);
 void forward(const q32_32 input[INPUT_SIZE]);
 unsigned int rl_decide(u64 task_last_wait_time, u64 task_total_wait_time, u64 task_wait_count, u64 last_burst_time, u64 total_burst_time, u64 task_burst_count, u64 queue_total_wait_time, u64 queue_wait_count, u64 queue_total_burst_time, u64 total_burst_count, struct task_struct *p);
+void log_states(u64 task_last_wait_time, u64 task_total_wait_time, u64 task_wait_count, u64 last_burst_time, u64 total_burst_time, u64 task_burst_count, u64 queue_total_wait_time, u64 queue_wait_count, u64 queue_total_burst_time, u64 total_burst_count, struct task_struct *p);
+

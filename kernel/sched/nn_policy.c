@@ -176,6 +176,8 @@ unsigned int rl_decide(
     for (int i = 1; i < OUTPUT_SIZE; ++i) {
         if (NN_OUTPUT[i] > best) { best = NN_OUTPUT[i]; argmax = i; }
     }
+    se->rl_last_action = argmax;
+    se->rl_last_action_prob = best;
     se->rl_last_state[0] = in[0];
     se->rl_last_state[1] = in[1];
     se->rl_last_state[2] = in[2];
@@ -185,3 +187,24 @@ unsigned int rl_decide(
     return slice_values[argmax];
 }
 
+void log_states(
+u64 task_last_wait_time,
+    u64 task_total_wait_time,   u64 task_wait_count,
+    u64 last_burst_time,        u64 total_burst_time, u64 task_burst_count,
+    u64 queue_total_wait_time,  u64 queue_wait_count,
+    u64 queue_total_burst_time, u64 total_burst_count,
+    struct task_struct *p
+){
+    q32_32 rl_next_state[INPUT_SIZE];
+    struct sched_entity *se = &p->se;
+
+    rl_build_input(
+        rl_next_state,
+        task_last_wait_time,
+        task_total_wait_time,   task_wait_count,
+        last_burst_time, total_burst_time, task_burst_count,
+        queue_total_wait_time,  queue_wait_count,
+        queue_total_burst_time, total_burst_count
+    );
+    trace_printk("%d, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld", p->pid, se->rl_last_state[0], se->rl_last_state[1], se->rl_last_state[2], se->rl_last_state[3], se->rl_last_state[4], se->rl_last_state[5], se->rl_last_action, se->rl_last_action_prob, rl_next_state[0], rl_next_state[1], rl_next_state[2], rl_next_state[3], rl_next_state[4], rl_next_state[5]);
+}
