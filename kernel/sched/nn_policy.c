@@ -178,13 +178,7 @@ unsigned int rl_decide(
     }
     se->rl_last_action = argmax;
     se->rl_last_action_prob = best;
-    se->rl_last_state[0] = in[0];
-    se->rl_last_state[1] = in[1];
-    se->rl_last_state[2] = in[2];
-    se->rl_last_state[3] = in[3];
-    se->rl_last_state[4] = in[4];
-    se->rl_last_state[5] = in[5];
-    return slice_values[argmax];
+        return slice_values[argmax];
 }
 
 void log_states(
@@ -206,5 +200,23 @@ u64 task_last_wait_time,
         queue_total_wait_time,  queue_wait_count,
         queue_total_burst_time, total_burst_count
     );
-    trace_printk("%d, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld\n", p->pid, se->rl_last_state[0], se->rl_last_state[1], se->rl_last_state[2], se->rl_last_state[3], se->rl_last_state[4], se->rl_last_state[5], se->rl_last_action, se->rl_last_action_prob, rl_next_state[0], rl_next_state[1], rl_next_state[2], rl_next_state[3], rl_next_state[4], rl_next_state[5]);
+   trace_printk(
+    "%d,%lld,%lld,%lld,%lld,%lld,%lld,%d,%lld,%lld,%lld,%lld,%lld,%lld,%lld\n",
+    p->pid,
+    (long long)se->rl_last_state[0],
+    (long long)se->rl_last_state[1],
+    (long long)se->rl_last_state[2],
+    (long long)se->rl_last_state[3],
+    (long long)se->rl_last_state[4],
+    (long long)se->rl_last_state[5],
+    (int)se->rl_last_action,                
+    (long long)se->rl_last_action_prob,
+    (long long)rl_next_state[0],
+    (long long)rl_next_state[1],
+    (long long)rl_next_state[2],
+    (long long)rl_next_state[3],
+    (long long)rl_next_state[4],
+    (long long)rl_next_state[5]
+);
+   memcpy(se->rl_last_state, rl_next_state, sizeof(q32_32) * INPUT_SIZE);
 }
