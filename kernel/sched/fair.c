@@ -5631,7 +5631,8 @@ static void put_prev_entity(struct cfs_rq *cfs_rq, struct sched_entity *prev)
 	cfs_rq->rl_burst_count++;
 	cfs_rq->rl_total_burst_time += burst_time;
 
-	struct task_struct *p = container_of(prev, struct task_struct, se);
+	if(entity_is_task(prev)){
+	struct task_struct *p = task_of(prev); 
 	if(prev->custom_slice){
 		log_states(prev->rl_last_wait_time, 
 		   prev->rl_total_wait_time, 
@@ -5644,6 +5645,7 @@ static void put_prev_entity(struct cfs_rq *cfs_rq, struct sched_entity *prev)
 		   cfs_rq->rl_total_burst_time, 
 		   cfs_rq->rl_burst_count, 
 		   p);
+	}
 	}
 	
 	/* throttle cfs_rqs exceeding runtime */
