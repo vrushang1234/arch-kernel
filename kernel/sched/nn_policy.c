@@ -206,5 +206,5 @@ u64 task_last_wait_time,
         queue_total_wait_time,  queue_wait_count,
         queue_total_burst_time, total_burst_count
     );
-    trace_printk("%d, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld", p->pid, se->rl_last_state[0], se->rl_last_state[1], se->rl_last_state[2], se->rl_last_state[3], se->rl_last_state[4], se->rl_last_state[5], se->rl_last_action, se->rl_last_action_prob, rl_next_state[0], rl_next_state[1], rl_next_state[2], rl_next_state[3], rl_next_state[4], rl_next_state[5]);
+    trace_printk("%d, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld\n", p->pid, se->rl_last_state[0], se->rl_last_state[1], se->rl_last_state[2], se->rl_last_state[3], se->rl_last_state[4], se->rl_last_state[5], se->rl_last_action, se->rl_last_action_prob, rl_next_state[0], rl_next_state[1], rl_next_state[2], rl_next_state[3], rl_next_state[4], rl_next_state[5]);
 }
