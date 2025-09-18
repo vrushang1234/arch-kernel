@@ -5629,6 +5629,7 @@ static void put_prev_entity(struct cfs_rq *cfs_rq, struct sched_entity *prev)
 	prev->rl_last_burst_time = burst_time;
 	prev->rl_burst_count ++;
 	cfs_rq->rl_burst_count++;
+	cfs_rq->rl_total_burst_time += burst_time;
 
 	struct task_struct *p = container_of(prev, struct task_struct, se);
 	if(prev->custom_slice){
